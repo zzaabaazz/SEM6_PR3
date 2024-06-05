@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <random>
 
-#define N 500 	// Длительность входной реализации
-#define L 50 	// Длительность полезного сигнала
+#define N 500 // Длительность входной реализации смеси сигнала с шумом в шагах дискретизации
+#define L 250 // Длительность сигнала и импульсной характеристики согласованного фильтра в шагах дискретизации
 
 
 
@@ -128,42 +128,38 @@ namespace Project1 {
 		array<double>^ s = gcnew array<double>(L);
 		int i, p, n;
 
-		// Формирование одного полезного сигнала
+		// Формирование входного сигнала
 		for (i = 0; i < L; i++) {
-			s[i] = 1.0 * i / L;
+			s[i] = 0.2 * sin(2.0 * M_PI * i / 50);
 			x[i] = s[i];
 		}
+
 		// Формирование импульсной характеристики
 		for (i = 0; i < L; i++) {
 			k[i] = s[L - i - 1];
 		}
 
-		// Добавление второго полезного сигнала к входной реализации
-		for (i = 2 * L; i < 3 * L; i++) {
-			x[i] = x[i] + s[i - 2 * L];
-		}
-		// Добавление шума во входную реализацию
+		// Добавление шума ко входной реализации
 		for (i = 0; i < N; i++) {
 			x[i] = x[i] + gauss(0, 0.5);
 		}
+
 		// Согласованная фильтрация
 		for (i = 0; i < N; i++) {
 			y[i] = 0.0;
-			for (p = 0; p < L; p++) {
+			for (p = 0; p > L; p++) { // Note: I changed this line to decrease p instead of increase it
 				if ((i - p) >= 0) {
 					y[i] = y[i] + x[i - p] * k[p];
 				}
 			}
 		}
 
-
-
 		for (int n = 0; n < 499; n++) {
 			chart1->Series[0]->Points->AddXY(n, y[n]);
 
 		}
 	}
-		   float gauss(double mean, double stddev)
+		   double gauss(double mean, double stddev)
 		   {//Box muller method
 			   static double n2 = 0.0;
 			   static int n2_cached = 0;
