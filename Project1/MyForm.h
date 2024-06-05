@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <random>
 
-#define N 500        // Длина входной реализации 
-#define L 35          //  Длительность импульсной характеристики
-//float sl_vel(float a, float b);
+#define N 500 	// Длительность входной реализации
+#define L 50 	// Длительность полезного сигнала
+
 
 
 namespace Project1 {
@@ -119,25 +119,34 @@ namespace Project1 {
 	private: System::Void chart1_Click(System::Object^ sender, System::EventArgs^ e) {
 	}
 	private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
-//help
-		// Массивы для входной реализации, импульсной 
-		// характеристики и  выходной реализации
+		//help
+		
+		// Полезный сигнал, импульсная характеристика, входная реализация, выходная реализация
 		array<double>^ x = gcnew array<double>(N);
+		array<double>^ y = gcnew array<double>(N);
 		array<double>^ k = gcnew array<double>(L);
-		array<double>^ y = gcnew array<double>(N); 
-		int i, p;
-		for (i = 0; i < N; i++)    // Формирование реализации дискретного белого гауссовского шума 
-		{
-			x[i] = gauss(0.0, 1.0);
+		array<double>^ s = gcnew array<double>(L);
+		int i, p, n;
+
+		// Формирование одного полезного сигнала
+		for (i = 0; i < L; i++) {
+			s[i] = 1.0 * i / L;
+			x[i] = s[i];
 		}
-
-
 		// Формирование импульсной характеристики
-		for (i = 0; i < L; i++) 
-		{
-			k[i] = 0.5;
+		for (i = 0; i < L; i++) {
+			k[i] = s[L - i - 1];
 		}
-		// Вычисление интеграла свертки
+
+		// Добавление второго полезного сигнала к входной реализации
+		for (i = 2 * L; i < 3 * L; i++) {
+			x[i] = x[i] + s[i - 2 * L];
+		}
+		// Добавление шума во входную реализацию
+		for (i = 0; i < N; i++) {
+			x[i] = x[i] + gauss(0, 0.5);
+		}
+		// Согласованная фильтрация
 		for (i = 0; i < N; i++) {
 			y[i] = 0.0;
 			for (p = 0; p < L; p++) {
@@ -146,13 +155,13 @@ namespace Project1 {
 				}
 			}
 		}
+
+
+
 		for (int n = 0; n < 499; n++) {
 			chart1->Series[0]->Points->AddXY(n, y[n]);
 
 		}
-
-
-		
 	}
 		   float gauss(double mean, double stddev)
 		   {//Box muller method
@@ -183,5 +192,5 @@ namespace Project1 {
 				   return n2 * stddev + mean;
 			   }
 		   }
-};
+	};
 }
