@@ -2,11 +2,12 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <random>
 
-#define N 500 // Длительность входной реализации смеси сигнала с шумом в шагах дискретизации
-#define L 250 // Длительность сигнала и импульсной характеристики согласованного фильтра в шагах дискретизации
-
+#define N 50     // Длительность сигнала в шагах дискретизации
+#define M 20    // Размер массивов для подсчета вероятности ложной тревоги
+#define MM 15  // Размер массива для подсчета вероятности правильного обнаружения
 
 
 namespace Project1 {
@@ -121,44 +122,103 @@ namespace Project1 {
 	private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
 		//help
 		
-		// Полезный сигнал, импульсная характеристика, входная реализация, выходная реализация
+		// Массивы сигнала, импульсной характеристики и их смеси
 		array<double>^ x = gcnew array<double>(N);
-		array<double>^ y = gcnew array<double>(N);
-		array<double>^ k = gcnew array<double>(L);
-		array<double>^ s = gcnew array<double>(L);
-		int i, p, n;
+		array<double>^ k = gcnew array<double>(N);
+		array<double>^ s = gcnew array<double>(N);
 
-		// Формирование входного сигнала
-		for (i = 0; i < L; i++) {
-			s[i] = 0.2 * sin(2.0 * M_PI * i / 50);
-			x[i] = s[i];
-		}
+		float porog;// Значение порога обнаружения для вычисления вероятности правильного обнаружения
+		float sym;
+		array<double>^ mass_porog = gcnew array<double>(M);// Массив порогов
+		array<double>^ veroa = gcnew array<double>(M);// Массив для вероятностей ложной тревоги
+		array<double>^ d_prav = gcnew array<double>(MM);// Массив для вероятностей правильного обнаружения
 
-		//  Формирование импульсной характеристики
-		for (i = 0; i < L; i++) {
-			k[i] = s[L - i - 1];
-		}
+		int i, j, n;
+		long nn;
+		float disp;// Оценка дисперсии шума на выходе системы
+		float z, A;
 
-		// Добавление шума ко входной реализации
+		// Формирование полезного сигнала
 		for (i = 0; i < N; i++) {
-			x[i] = x[i] + gauss(0, 0.5);
+			s[i] = cos(2. * M_PI * i / N);
 		}
 
-		// Согласованная фильтрация
+		// Формирование импульсной характеристики согласованного фильтра
 		for (i = 0; i < N; i++) {
-			y[i] = 0.0;
-			for (p = 0; p < L; p++) { //я изменил p > L тк не выполняется
-				if ((i - p) >= 0) {
-					y[i] = y[i] + x[i - p] * k[p];
+			k[i] = s[N - 1 - i];
+		}
+
+
+		// Оценка дисперсии шума на выходе системы
+		disp = 0;
+		for (i = 0; i < 200; i++) {   // Цикл по 200 экспериментам
+			for (j = 0; j < N; j++) {
+				x[j] = gauss(0, 1);
+			}
+			z = sogl(x[N]);
+			disp = disp + z * z;
+		}
+		disp = disp / 200.;
+
+
+		// Формирование массива порогов
+		for (i = 0; i < M; i++) {
+			mass_porog[i] = sqrt(disp) * (1.0 + 0.1 * i);
+		}
+
+		// Вычисление зависимости вероятности ложной тревоги от порога обнаружения
+		for (nn = 0; nn < 30000L; nn++) {
+			for (j = 0; j < N; j++) {
+				x[j] = gauss(0, 1);
+			}
+			z = sogl(x[N]);
+			for (j = 0; j < M; j++) {
+				if (z >= mass_porog[j]) {
+					veroa[j]++;
 				}
 			}
 		}
-
-		for (int n = 0; n < 499; n++) {
-			chart1->Series[0]->Points->AddXY(n, y[n]);
-
+		for (j = 0; j < M; j++) {
+			veroa[j] = veroa[j] / 30000.;
 		}
+
+		// Вывод порогов обнаружения и соответствующих им вероятностей ложных тревог
+		for (i = 0; i < M; i++) {
+			printf("\n порог обнаружения =%f вероятность ложной  тревоги = %f ", mass_porog[i], veroa[i]);
+		}
+
+		// Ввод порога для вычисления зависимости вероятности правильного обнаружения от амплитуды сигнала
+		printf("\n  Ввод порога обнаружения");
+		scanf("%f", &porog);
+
+		// Вычисление зависимости вероятности правильного обнаружения от амплитуды сигнала
+		for (n = 0; n < MM; n++) {
+			A = 0.2 + 0.05 * n;           // Амплитуда входного сигнала
+			for (j = 0; j < 200; j++) {   // Цикл по 200 экспериментам
+				for (i = 0; i < N; i++) {
+					x[i] = gauss(0, 1) + A * s[i];
+				}
+				z = sogl(x[N]);
+				if (z >= porog) {
+					d_prav[n] = d_prav[n] + 1. / 200.;
+				}
+			}
+			printf("\n Амплитуда  = %f  Вероятность правильного обнаружения %f", A, d_prav[n]);
+		}
+
 	}
+
+		   float sogl(double x[N]) {
+			   int i;
+			   float sym;
+			   sym = 0;
+			   for (i = 0; i < N; i++) {
+				   sym = sym + x[i] * k[N - 1 - i];
+			   }
+			   return sym;
+		   }
+
+
 		   double gauss(double mean, double stddev)
 		   {//Box muller method
 			   static double n2 = 0.0;
