@@ -134,7 +134,7 @@ namespace Project1 {
 			x[i] = s[i];
 		}
 
-		// Формирование импульсной характеристики
+		//  Формирование импульсной характеристики
 		for (i = 0; i < L; i++) {
 			k[i] = s[L - i - 1];
 		}
@@ -147,7 +147,7 @@ namespace Project1 {
 		// Согласованная фильтрация
 		for (i = 0; i < N; i++) {
 			y[i] = 0.0;
-			for (p = 0; p > L; p++) { // Note: I changed this line to decrease p instead of increase it
+			for (p = 0; p < L; p++) { //я изменил p > L тк не выполняется
 				if ((i - p) >= 0) {
 					y[i] = y[i] + x[i - p] * k[p];
 				}
