@@ -120,7 +120,7 @@ namespace Project1 {
 	}
 	private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
 		//help
-		
+
 		// Полезный сигнал, импульсная характеристика, входная реализация, выходная реализация
 		array<double>^ x = gcnew array<double>(N);
 		array<double>^ y = gcnew array<double>(N);
