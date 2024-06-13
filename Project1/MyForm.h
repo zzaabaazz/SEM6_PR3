@@ -120,7 +120,7 @@ namespace Project1 {
 	}
 	private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
 		//help
-		
+
 		// Полезный сигнал, импульсная характеристика, входная реализация, выходная реализация
 		array<double>^ x = gcnew array<double>(N);
 		array<double>^ y = gcnew array<double>(N);
@@ -130,13 +130,13 @@ namespace Project1 {
 
 		// Формирование входного сигнала
 		for (i = 0; i < L; i++) {
-			s[i] = 0.2 * sin(2.0 * M_PI * i / 50);
+			s[i] = 3 * i;
 			x[i] = s[i];
 		}
 
 		//  Формирование импульсной характеристики
 		for (i = 0; i < L; i++) {
-			k[i] = s[L - i - 1];
+			k[i] = -1 * i;
 		}
 
 		// Добавление шума ко входной реализации
