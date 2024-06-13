@@ -1,9 +1,14 @@
 #pragma once
+
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <random>
+
+#include <iostream>
+#include <locale>
+#include <windows.h>
 
 #define N 50     // Длительность сигнала в шагах дискретизации
 #define M 20    // Размер массивов для подсчета вероятности ложной тревоги
@@ -121,7 +126,7 @@ namespace Project1 {
 	}
 	private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
 		//help
-		
+		SetConsoleOutputCP(65001);
 		// Массивы сигнала, импульсной характеристики и их смеси
 		array<double>^ x = gcnew array<double>(N);
 		array<double>^ k = gcnew array<double>(N);
@@ -155,7 +160,7 @@ namespace Project1 {
 			for (j = 0; j < N; j++) {
 				x[j] = gauss(0, 1);
 			}
-			z = sogl(x[N]);
+			z = sogl(x, k);
 			disp = disp + z * z;
 		}
 		disp = disp / 200.;
@@ -171,7 +176,7 @@ namespace Project1 {
 			for (j = 0; j < N; j++) {
 				x[j] = gauss(0, 1);
 			}
-			z = sogl(x[N]);
+			z = sogl(x, k);
 			for (j = 0; j < M; j++) {
 				if (z >= mass_porog[j]) {
 					veroa[j]++;
@@ -184,12 +189,12 @@ namespace Project1 {
 
 		// Вывод порогов обнаружения и соответствующих им вероятностей ложных тревог
 		for (i = 0; i < M; i++) {
-			printf("\n порог обнаружения =%f вероятность ложной  тревоги = %f ", mass_porog[i], veroa[i]);
+			printf("\n порог обнаружения = %f\tвероятность ложной тревоги = %f ", mass_porog[i], veroa[i]);
 		}
 
 		// Ввод порога для вычисления зависимости вероятности правильного обнаружения от амплитуды сигнала
-		printf("\n  Ввод порога обнаружения");
-		scanf("%f", &porog);
+		printf("\n  Ввод порога обнаружения: ");
+		scanf_s("%f", &porog);
 
 		// Вычисление зависимости вероятности правильного обнаружения от амплитуды сигнала
 		for (n = 0; n < MM; n++) {
@@ -198,17 +203,16 @@ namespace Project1 {
 				for (i = 0; i < N; i++) {
 					x[i] = gauss(0, 1) + A * s[i];
 				}
-				z = sogl(x[N]);
+				z = sogl(x, k);
 				if (z >= porog) {
 					d_prav[n] = d_prav[n] + 1. / 200.;
 				}
 			}
-			printf("\n Амплитуда  = %f  Вероятность правильного обнаружения %f", A, d_prav[n]);
+			printf("\n Амплитуда  = %f\tВероятность правильного обнаружения %f", A, d_prav[n]);
 		}
-
 	}
 
-		   float sogl(double x[N]) {
+		   float sogl(array<double>^ x, array<double>^ k) {
 			   int i;
 			   float sym;
 			   sym = 0;
