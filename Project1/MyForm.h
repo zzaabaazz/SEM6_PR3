@@ -124,19 +124,20 @@ namespace Project1 {
 		// Полезный сигнал, импульсная характеристика, входная реализация, выходная реализация
 		array<double>^ x = gcnew array<double>(N);
 		array<double>^ y = gcnew array<double>(N);
-		array<double>^ k = gcnew array<double>(L);
-		array<double>^ s = gcnew array<double>(L);
+		array<double>^ k = gcnew array<double>(N);
+		array<double>^ s = gcnew array<double>(N);
 		int i, p, n;
 
 		// Формирование входного сигнала
-		for (i = 0; i < L; i++) {
-			s[i] = 3 * i;
+		for (i = 0; i < N; i++) {
+			s[i] = exp(-3 * i);
 			x[i] = s[i];
 		}
-
+		float delta;
 		//  Формирование импульсной характеристики
-		for (i = 0; i < L; i++) {
-			k[i] = -1 * i;
+		for (i = 0; i < N; i++) {
+			delta = (i == L) ? 1 : 0;
+			k[i] = exp(-5 * i) + delta;
 		}
 
 		// Добавление шума ко входной реализации
@@ -154,7 +155,7 @@ namespace Project1 {
 			}
 		}
 
-		for (int n = 0; n < 499; n++) {
+		for (int n = 0; n < N; n++) {
 			chart1->Series[0]->Points->AddXY(n, y[n]);
 
 		}
